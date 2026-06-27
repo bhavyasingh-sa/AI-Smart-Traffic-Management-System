@@ -6,7 +6,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import LabelEncoder
 st.set_page_config(
     page_title="AI Smart Traffic Management",
-    page_icon="🚦",
     layout="wide"
 )
 @st.cache_data
@@ -16,7 +15,6 @@ def load_data():
     return df
 @st.cache_resource
 def load_model():
-
     import os
     from sklearn.ensemble import RandomForestRegressor
     model_path = "models/traffic_model.pkl"
@@ -121,7 +119,6 @@ def show_dashboard():
     st.caption(
     "Traffic Congestion Prediction using Information Retrieval and Machine Learning"
 )
-  
     st.sidebar.header("Traffic Conditions")
     temp = st.sidebar.number_input("Temperature", value=289.0)
     rain = st.sidebar.number_input("Rain", value=0.0)
@@ -140,14 +137,8 @@ def show_dashboard():
         "🚦 Predict Traffic",
         use_container_width=True
     ):
-
-        # -----------------------------
-        # Prediction Summary
-        # -----------------------------
         with st.container(border=True):
-
             st.subheader("Prediction Summary")
-
             prediction = predict_traffic(
                 model,
                 encoder,
@@ -160,7 +151,6 @@ def show_dashboard():
                 month,
                 day
             )
-
             if prediction < 2000:
                 congestion = "Low"
                 signal = "30 sec"
@@ -170,40 +160,25 @@ def show_dashboard():
             else:
                 congestion = "High"
                 signal = "90 sec"
-
             col1, col2, col3 = st.columns(3)
-
             with col1:
                 st.metric("Traffic Volume", int(prediction))
-
             with col2:
                 st.metric("Congestion", congestion)
-
             with col3:
                 st.metric("Green Signal", signal)
-
             progress = min(int(prediction / 6000 * 100), 100)
-
             st.progress(progress)
-
             st.caption(f"Current Traffic Load: {progress}%")
-
-        # -----------------------------
-        # Historical Traffic Records
-        # -----------------------------
         with st.container(border=True):
-
             st.subheader("Historical Traffic Records")
-
             query = f"{weather} {hour}"
-
             similar = find_similar_cases(
                 query,
                 df,
                 vectorizer,
                 tfidf_matrix
             )
-
             st.dataframe(
                 similar[
                     [
@@ -216,35 +191,19 @@ def show_dashboard():
                 ],
                 use_container_width=True
             )
-
 df = load_data()
-
 model = load_model()
-
 encoder = create_encoder(df)
-
 vectorizer, tfidf_matrix = build_search_index(df)
-
 show_dashboard()
-
 with st.container(border=True):
-
     st.subheader("Traffic Analytics")
-
     st.write("### Average Traffic by Hour")
-
     hourly = df.groupby("hour")["traffic_volume"].mean()
-
     st.line_chart(hourly)
-
     st.write("### Weather Distribution")
-
     weather_counts = df["weather_main"].value_counts()
-
     st.bar_chart(weather_counts)
-
     st.write("### Average Traffic by Month")
-
     monthly = df.groupby("month")["traffic_volume"].mean()
-
     st.line_chart(monthly)
