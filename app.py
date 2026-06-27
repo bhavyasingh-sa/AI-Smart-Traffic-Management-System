@@ -16,7 +16,36 @@ def load_data():
     return df
 @st.cache_resource
 def load_model():
-    model = joblib.load("models/traffic_model.pkl")
+
+    import os
+    from sklearn.ensemble import RandomForestRegressor
+    model_path = "models/traffic_model.pkl"
+    if os.path.exists(model_path):
+        return joblib.load(model_path)
+    df = pd.read_csv("dataset/cleaned_traffic_data.csv")
+    df["holiday"] = df["holiday"].fillna("NoHoliday")
+    encoder = LabelEncoder()
+    df["weather_main"] = encoder.fit_transform(df["weather_main"])
+    X = df[
+        [
+            "temp",
+            "rain_1h",
+            "snow_1h",
+            "clouds_all",
+            "weather_main",
+            "hour",
+            "month",
+            "day",
+        ]
+    ]
+    y = df["traffic_volume"]
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42
+    )
+    model.fit(X, y)
+    os.makedirs("models", exist_ok=True)
+    joblib.dump(model, model_path)
     return model
 @st.cache_resource
 def create_encoder(df):
