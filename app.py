@@ -1,6 +1,8 @@
+
 import streamlit as st
 import pandas as pd
 import joblib
+import google.genai as genai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import LabelEncoder
@@ -114,6 +116,47 @@ def find_similar_cases(
     )
     top = similarity[0].argsort()[-5:][::-1]
     return df.iloc[top]
+
+def get_ai_explanation(
+    prediction,
+    congestion,
+    signal,
+    similar_records
+):
+    client = genai.Client(
+        api_key=st.secrets["GEMINI_API_KEY"]
+    )
+
+    prompt = f"""
+You are an AI Traffic Management Assistant.
+
+Current Prediction
+
+Traffic Volume: {prediction:.0f}
+
+Congestion: {congestion}
+
+Green Signal Recommendation: {signal}
+
+Historical Traffic Records
+
+{similar_records.to_string(index=False)}
+
+Explain:
+
+1. Why congestion is occurring.
+2. How the historical records support this prediction.
+3. Why the recommended signal timing is appropriate.
+
+Keep the answer under 150 words.
+"""
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+
+    return response.text
 def show_dashboard():
     st.title("AI-Based Smart Traffic Management System")
     st.caption(
@@ -191,6 +234,22 @@ def show_dashboard():
                 ],
                 use_container_width=True
             )
+
+            st.divider()
+
+            st.subheader("🤖 AI Explanation")
+
+            with st.spinner("Generating explanation..."):
+
+                explanation = get_ai_explanation(
+                    prediction,
+                    congestion,
+                    signal,
+                    similar
+                )
+
+            st.write(explanation)
+
 df = load_data()
 model = load_model()
 encoder = create_encoder(df)
